@@ -1,4 +1,4 @@
-from synthetic_sim import ChargedParticlesSim, SpringSim
+from synthetic_sim import ChargedParticlesSim, SpringSim, GravitySim
 import time
 import numpy as np
 import argparse
@@ -31,6 +31,9 @@ if args.simulation == 'springs':
 elif args.simulation == 'charged':
     sim = ChargedParticlesSim(noise_var=0.0, n_balls=args.n_balls)
     suffix = '_charged'
+elif args.simulation == 'gravity':
+    sim = GravitySim(noise_var=0.0, n_balls=args.n_balls)
+    suffix = '_gravity'
 else:
     raise ValueError('Simulation {} not implemented'.format(args.simulation))
 
