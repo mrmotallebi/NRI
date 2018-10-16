@@ -132,14 +132,6 @@ rel_rec = Variable(rel_rec)
 rel_send = Variable(rel_send)
 
 
-def nll_gaussian(preds, target, variance, add_const=False):
-    neg_log_p = ((preds - target) ** 2 / (2 * variance))
-    if add_const:
-        const = 0.5 * np.log(2 * np.pi * variance)
-        neg_log_p += const
-    return neg_log_p.sum() / (target.size(0) * target.size(1))
-
-
 def train(epoch, best_val_loss):
     t = time.time()
     loss_train = []
@@ -192,9 +184,9 @@ def train(epoch, best_val_loss):
 
         optimizer.step()
 
-        loss_train.append(loss.data[0])
-        mse_train.append(mse.data[0])
-        mse_baseline_train.append(mse_baseline.data[0])
+        loss_train.append(loss.item())
+        mse_train.append(mse.item())
+        mse_baseline_train.append(mse_baseline.item())
 
     model.eval()
     for batch_idx, (inputs, relations) in enumerate(valid_loader):
@@ -227,9 +219,9 @@ def train(epoch, best_val_loss):
         mse = F.mse_loss(output, target)
         mse_baseline = F.mse_loss(inputs[:, :, :-1, :], inputs[:, :, 1:, :])
 
-        loss_val.append(loss.data[0])
-        mse_val.append(mse.data[0])
-        mse_baseline_val.append(mse_baseline.data[0])
+        loss_val.append(loss.item())
+        mse_val.append(mse.item())
+        mse_baseline_val.append(mse_baseline.item())
 
     print('Epoch: {:04d}'.format(epoch),
           'nll_train: {:.10f}'.format(np.mean(loss_train)),
@@ -298,9 +290,9 @@ def test():
         mse = F.mse_loss(output, target)
         mse_baseline = F.mse_loss(ins_cut[:, :, :-1, :], ins_cut[:, :, 1:, :])
 
-        loss_test.append(loss.data[0])
-        mse_test.append(mse.data[0])
-        mse_baseline_test.append(mse_baseline.data[0])
+        loss_test.append(loss.item())
+        mse_test.append(mse.item())
+        mse_baseline_test.append(mse_baseline.item())
 
         # For plotting purposes
         if args.decoder == 'rnn':
@@ -309,14 +301,14 @@ def test():
             output = output[:, :, args.timesteps:, :]
             target = inputs[:, :, -args.timesteps:, :]
             baseline = inputs[:, :, -(args.timesteps + 1):-args.timesteps,
-                       :].expand_as(target)
+                              :].expand_as(target)
         else:
             data_plot = inputs[:, :, args.timesteps:args.timesteps + 21,
-                        :].contiguous()
+                               :].contiguous()
             output = model(data_plot, rel_type_onehot, rel_rec, rel_send, 20)
             target = data_plot[:, :, 1:, :]
             baseline = inputs[:, :, args.timesteps:args.timesteps + 1,
-                       :].expand_as(target)
+                              :].expand_as(target)
         mse = ((target - output) ** 2).mean(dim=0).mean(dim=0).mean(dim=-1)
         tot_mse += mse.data.cpu().numpy()
         counter += 1
